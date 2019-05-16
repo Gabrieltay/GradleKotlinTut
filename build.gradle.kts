@@ -25,6 +25,7 @@ repositories {
 
 plugins {
     java
+    jacoco
     kotlin("jvm") version "1.3.31"
     id("com.gradle.build-scan") version "2.1"
     id("org.jetbrains.dokka") version "0.9.17"
@@ -47,6 +48,11 @@ buildScan {
     termsOfServiceAgree = "yes"
 
     publishAlways()
+}
+
+jacoco {
+    toolVersion = "0.8.3"
+    reportsDir = file("$buildDir/reports/jacoco")
 }
 
 tasks.dokka {
@@ -93,6 +99,23 @@ task<io.gitlab.arturbosch.detekt.Detekt>("detektFast") {
 }
 
 
+tasks.jacocoTestReport {
+    reports {
+        xml.isEnabled = false
+        csv.isEnabled = false
+        html.destination = file("${buildDir}/jacocoHtml")
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = "1.00".toBigDecimal()
+            }
+        }
+    }
+}
 
 tasks.check {
     dependsOn("ktlint")
@@ -100,4 +123,12 @@ tasks.check {
 
 tasks.check {
     dependsOn("detektFast")
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
 }
